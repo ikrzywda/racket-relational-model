@@ -30,6 +30,24 @@
                       (table-rows tab))))
         (raise "Invalid column" #f))))
 
+(define (table-rename col ncol tab)
+  (let ([col-names (map (lambda (col) (column-info-name col)) (table-schema tab))])
+    (if (member col col-names)
+        (table (let ([new-headers (map (lambda (header)
+                                         (if (equal? (column-info-name header) col)
+                                             (column-info ncol (column-info-type header))
+                                             header))
+                                       (table-schema tab))])
+
+                 (map (lambda (new-header original-col-info)
+                        (column-info new-header (column-info-type original-col-info)))
+                      new-headers
+                      (table-schema tab)))
+               (table-rows tab))
+        (raise "Invalid column" #f))))
+
+
+        
 ;; TEST DATA - will be replaced with tests
 
 (define cities
