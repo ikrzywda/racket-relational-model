@@ -6,7 +6,6 @@
 (define-struct table (schema rows)
   #:transparent)
 
-
 (define (check-type annotation)
   (cond
     [(equal? annotation 'string) (lambda (x) (string? x))]
@@ -20,6 +19,16 @@
         (cons row (table-rows tab))
         (raise "Invalid row" #f))))
 
+(define (table-project cols tab)
+  (let ([col-names (map (lambda (col) (column-info-name col)) (table-schema tab))])
+    (if (andmap (lambda (col) (member col col-names)) cols) ; change to existence predicate
+        (table (filter (lambda (header) (if (member (column-info-name header) cols) #t #f))
+                       (table-schema tab))
+               (let ([col-filter (map (lambda (col) (if (member col cols) #t #f)) col-names)])
+                 (map (lambda (current-row)
+                        (foldr (lambda (a b res) (if a (cons b res) res)) '() col-filter current-row))
+                      (table-rows tab))))
+        (raise "Invalid column" #f))))
 
 ;; TEST DATA - will be replaced with tests
 
