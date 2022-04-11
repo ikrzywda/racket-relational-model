@@ -66,10 +66,10 @@
   (if (null? cols)
       tab
       (let ([sorted (table (table-schema tab)
-             (sorter (comparison-predicate (car cols) tab)
-                     (table-rows tab)
-                     (index-of (col-names tab) (car cols))))])
-                     (table-sort (cdr cols) sorted))))
+                           (sorter (comparison-predicate (car cols) tab)
+                                   (table-rows tab)
+                                   (index-of (col-names tab) (car cols))))])
+        (table-sort (cdr cols) sorted))))
 
 ;; TEST DATA - will be replaced with tests
 
