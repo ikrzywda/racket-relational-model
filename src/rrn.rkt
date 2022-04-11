@@ -19,6 +19,9 @@
         (cons row (table-rows tab))
         (raise "Invalid row" #f))))
 
+(define (col-names tab)
+  (map (lambda (col) (column-info-name col)) (table-schema tab)))
+
 (define (table-project cols tab)
   (let ([col-names (map (lambda (col) (column-info-name col)) (table-schema tab))])
     (if (andmap (lambda (col) (member col col-names)) cols) ; change to existence predicate
@@ -38,7 +41,6 @@
                                              (column-info ncol (column-info-type header))
                                              header))
                                        (table-schema tab))])
-
                  (map (lambda (new-header original-col-info)
                         (column-info new-header (column-info-type original-col-info)))
                       new-headers
@@ -46,8 +48,29 @@
                (table-rows tab))
         (raise "Invalid column" #f))))
 
+(define (col-name-to-type col-names schema)
+  (let ([type (findf (lambda (header) (equal? (column-info-name header) col-names)) schema)])
+    (if type (column-info-type type) (raise "Invalid column" #f))))
 
-        
+(define (comparison-predicate col tab)
+  (let ([type (col-name-to-type col (table-schema tab))])
+    (cond
+      [(equal? type 'string) (lambda (x y) (string<? x y))]
+      [(equal? type 'number) (lambda (x y) (< x y))]
+      [(equal? type 'boolean) (lambda (x y) (not (= x y)))])))
+
+(define (sorter cmp ll i)
+  (sort ll (lambda (a b) (if (cmp (list-ref a i) (list-ref b i)) #t #f))))
+
+(define (table-sort cols tab)
+  (if (null? cols)
+      tab
+      (let ([sorted (table (table-schema tab)
+             (sorter (comparison-predicate (car cols) tab)
+                     (table-rows tab)
+                     (index-of (col-names tab) (car cols))))])
+                     (table-sort (cdr cols) sorted))))
+
 ;; TEST DATA - will be replaced with tests
 
 (define cities
